@@ -23,7 +23,7 @@ import Reveal from '@/components/Reveal';
 import ExcursionCard from '@/components/ExcursionCard';
 import { useI18n } from '@/i18n/context';
 import { CONTACT, excursions, experienceTypes, gallery, galleryCategories, services, type GalleryCategory } from '@/data/content';
-import { supabase, type TripRequest } from '@/lib/supabase';
+import { sendTripRequest, type TripRequest } from '@/lib/emailjs';
 import { useRouter } from '@/router';
 
 const icons = { Compass, Car, Plane, BedDouble, CalendarCheck, Mountain, Waves, Fish, Landmark, Tent };
@@ -90,8 +90,11 @@ export function Contact() {
   const update = (key: keyof TripRequest, value: string) => setForm((current) => ({ ...current, [key]: value }));
   const submit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setStatus('sending'); setError('');
-    const { error: insertError } = await supabase.from('trip_requests').insert(form);
-    if (insertError) { setStatus('error'); setError(t('contact.form.error')); return; }
+    try {
+      await sendTripRequest(form);
+    } catch {
+      setStatus('error'); setError(t('contact.form.error')); return;
+    }
     setStatus('success');
   };
   const inputClass = 'mt-2 w-full rounded-xl border border-sand-200 bg-sand-50 px-4 py-3 text-sm text-volcanic-900 outline-none transition placeholder:text-volcanic-400 focus:border-sea-500 focus:ring-2 focus:ring-sea-500/15';
